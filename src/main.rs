@@ -1,0 +1,47 @@
+use axum::{Router, routing::get};
+use std::net::SocketAddr;
+use rand::Rng;
+
+struct Metric<'a> {
+    comment: &'a str,
+    label: &'a str,
+    value: String,
+}
+
+impl Metric<'_> {
+    pub fn new<'a>(comment: &'a str, label: &'a str, value: String) -> Metric<'a> {
+        Metric { comment, label, value }
+    }
+    pub fn update_value(&mut self, value: String) -> () {
+        self.value = value;
+    }
+    pub fn display(&self) -> String {
+        if (self.comment.len() == 0) {
+            return format!("{} {}\n", self.label, self.value);
+        } 
+        format!("# {}\n{} {}\n", self.comment, self.label, self.value)
+    }
+}
+
+#[tokio::main]
+async fn main() {
+    let app = Router::new().route("/metrics", get(get_metrics));
+    let addr = SocketAddr::from(([127,0,0,1], 3000));
+
+
+    println!("Server running on http://localhost:3000");
+    axum::Server::bind(&addr)
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
+}
+
+async fn get_metrics() -> String {
+    let random_value = rand::thread_rng().gen_range(0..100);
+    let metrics: Vec<Metric> = vec![
+        Metric::new("", "random_metric", random_value.to_string()), 
+        Metric::new("Yet another random metric", "another_random_metric", (random_value+1).to_string()),
+    ];
+    let result = metrics.iter().map(|m| m.display()).collect::<String>();
+    result
+}
