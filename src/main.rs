@@ -3,23 +3,23 @@ use std::net::SocketAddr;
 use rand::Rng;
 
 struct Metric<'a> {
-    comment: &'a str,
+    comment: Option<&'a str>,
     label: &'a str,
     value: String,
 }
 
 impl Metric<'_> {
-    pub fn new<'a>(comment: &'a str, label: &'a str, value: String) -> Metric<'a> {
+    pub fn new<'a>(comment: Option<&'a str>, label: &'a str, value: String) -> Metric<'a> {
         Metric { comment, label, value }
     }
     pub fn update_value(&mut self, value: String) -> () {
         self.value = value;
     }
     pub fn display(&self) -> String {
-        if (self.comment.len() == 0) {
-            return format!("{} {}\n", self.label, self.value);
-        } 
-        format!("# {}\n{} {}\n", self.comment, self.label, self.value)
+        match self.comment {
+            Some(c) => format!("# {}\n{} {}\n", c , self.label, self.value),
+            None => return format!("{} {}\n", self.label, self.value),
+        }
     }
 }
 
@@ -39,8 +39,8 @@ async fn main() {
 async fn get_metrics() -> String {
     let random_value = rand::thread_rng().gen_range(0..100);
     let metrics: Vec<Metric> = vec![
-        Metric::new("", "random_metric", random_value.to_string()), 
-        Metric::new("Yet another random metric", "another_random_metric", (random_value+1).to_string()),
+        Metric::new(None, "random_metric", random_value.to_string()), 
+        Metric::new(Some("Yet another random metric"), "another_random_metric", (random_value+1).to_string()),
     ];
     let result = metrics.iter().map(|m| m.display()).collect::<String>();
     result
