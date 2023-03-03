@@ -26,10 +26,10 @@ impl Metric<'_> {
 #[tokio::main]
 async fn main() {
     let app = Router::new().route("/metrics", get(get_metrics));
-    let addr = SocketAddr::from(([127,0,0,1], 3000));
+    let addr = SocketAddr::from(([127,0,0,1], 9100));
 
 
-    println!("Server running on http://localhost:3000");
+    println!("Server running on http://localhost:9100");
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
